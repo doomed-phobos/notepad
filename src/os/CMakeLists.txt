@@ -1,3 +1,5 @@
+include(FindSkia)
+
 set(NOTEPAD_SOURCES
    window.cc)
 
@@ -14,4 +16,4 @@ endif()
 add_library(os-lib ${NOTEPAD_SOURCES})
 target_include_directories(os-lib PUBLIC "..")
 target_compile_definitions(os-lib PUBLIC ${NOTEPAD_COMPILE_DEFINITIONS})
-target_link_libraries(os-lib base-lib ${NOTEPAD_LIBRARIES})
+target_link_libraries(os-lib base-lib skia ${NOTEPAD_LIBRARIES})
