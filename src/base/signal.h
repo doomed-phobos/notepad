@@ -42,7 +42,7 @@ namespace base {
          }
       }
 
-      void operator()(Args&&... args) {
+      void operator()(Args&&... args) const {
          for(auto& slot : m_slots)
             (*slot)(std::forward<Args>(args)...);
       }

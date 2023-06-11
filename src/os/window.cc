@@ -19,25 +19,9 @@ namespace os {
       m_base->setTitle(title);
    }
 
-   #ifdef NOTEPAD_UNIX
    void Window::run() {
-      priv::Event ev;
-      XEvent xev;
-      while(1) {
-         m_base->nextEvent(xev);
-         m_base->processEvent(xev, ev);
-
-         if(ev.type == priv::Event::CloseWindow_Type) {
-            onExit();
-            break;
-         }
-      }
+      m_base->run(*this);
    }
-   #else
-   void Window::run() {
-
-   }
-   #endif
 
    std::shared_ptr<Window> Window::Make(int w, int h) {
       #ifdef NOTEPAD_UNIX

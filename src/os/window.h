@@ -4,6 +4,8 @@
 #include <memory>
 
 namespace os {
+   struct MouseEvent;
+
    class Window {
    public:
       ~Window();
@@ -13,6 +15,7 @@ namespace os {
       void run();
 
       base::Signal<void()> onExit;
+      base::Signal<void(const MouseEvent&)> onMouseOver;
 
       static std::shared_ptr<Window> Make(int w, int h);
    private:
