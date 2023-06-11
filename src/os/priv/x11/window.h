@@ -10,7 +10,8 @@
 namespace os {
    class Window::X11Window {
    public:
-      X11Window(::Display* const xdisplay, ::Window xwin, ::GC xgc) :
+      X11Window(const Window& m_parent, ::Display* const xdisplay, ::Window xwin, ::GC xgc) :
+         m_parent{m_parent},
          m_xdisplay{xdisplay},
          m_xwin{xwin},
          m_xgc{xgc} {}
@@ -21,6 +22,14 @@ namespace os {
 
       void focus() {
          XMapRaised(m_xdisplay, m_xwin);
+      }
+
+      void invalidate() {
+         ::Window root;
+         int x, y;
+         unsigned w, h, b, d;
+         XGetGeometry(m_xdisplay, m_xwin, &root, &x, &y, &w, &h, &b, &d);
+         onPaint(x, y, w, h);
       }
 
       void setTitle(const char* title) {
@@ -34,7 +43,7 @@ namespace os {
          XSetWMName(m_xdisplay, m_xwin, &prop);
       }
 
-      void run(const Window& parent) {
+      void run() {
          XEvent ev;
          bool run = true;
          while(run) {
@@ -44,7 +53,7 @@ namespace os {
                case ClientMessage:
                   if(ev.xclient.message_type == WM_PROTOCOLS &&
                      Atom(ev.xclient.data.l[0]) == WM_DELETE_WINDOW) {
-                     parent.onExit();
+                     m_parent.onExit();
                      run = false;
                   }
                break;
@@ -57,15 +66,15 @@ namespace os {
                   if(is_mouse_wheel_button(ev.xbutton.button)) {
                      if(ev.type == ButtonPress) {
                         mev.delta = get_mouse_wheel_delta(ev.xbutton.button);
-                        parent.onMouseWheel(mev);
+                        m_parent.onMouseWheel(mev);
                      }
                   } else {
                      mev.button = get_mouse_button(ev.xbutton.button);
 
                      if(ev.type == ButtonPress)
-                        parent.onMouseDown(mev);
+                        m_parent.onMouseDown(mev);
                      else if(mev.button)
-                        parent.onMouseUp(mev);
+                        m_parent.onMouseUp(mev);
                   }
                }
                break;
@@ -73,43 +82,24 @@ namespace os {
                   MouseEvent mev;
                   mev.modifiers = get_key_modifiers(ev.xmotion.state);
                   mev.pos = {ev.xmotion.x, ev.xmotion.y};
-                  parent.onMouseOver(mev);
+                  m_parent.onMouseOver(mev);
                }
                break;
                case ConfigureNotify: {
                   int w = ev.xconfigure.width;
                   int h = ev.xconfigure.height;
                   m_surface.create(w, h);
-                  parent.onResize({w, h});
+                  m_parent.onResize({w, h});
                }
                   break;
-               case Expose: {
-                  parent.onPaint(m_surface.skCanvas());
-                  
-                  XImage image{0};
-                  int x = ev.xexpose.x;
-                  int y = ev.xexpose.y;
-                  int w = ev.xexpose.width;
-                  int h = ev.xexpose.height;
-                  if(convert_skia_bitmap_to_ximage(m_surface.bitmap(), image)) {
-                     XPutImage(
-                        m_xdisplay,
-                        m_xwin,
-                        m_xgc,
-                        &image,
-                        x, y,
-                        x, y, w, h
-                     );
-                  } else {
-                     throw std::runtime_error("Error to convert Skia surface to XImage");
-                  }
-               }
+               case Expose:
+                  onPaint(ev.xexpose.x, ev.xexpose.y, ev.xexpose.width, ev.xexpose.height);
                break;
             }
          }
       }
 
-      static X11Window* Make(int w, int h) {
+      static X11Window* Make(const Window& m_parent, int w, int h) {
          const auto xdisplay = priv::X11::GetInstance()->display();
          auto xwin = XCreateSimpleWindow(
                            xdisplay,
@@ -135,7 +125,7 @@ namespace os {
                                       ButtonReleaseMask | KeyPressMask | KeyReleaseMask |
                                       StructureNotifyMask);
 
-         X11Window* win = new X11Window(xdisplay, xwin, xgc);
+         X11Window* win = new X11Window(m_parent, xdisplay, xwin, xgc);
          win->focus();
          
          return win;
@@ -191,12 +181,31 @@ namespace os {
          return XInitImage(&image) ? true : false;
       }
 
+      void onPaint(int x, int y, int w, int h) {
+         m_parent.onPaint(m_surface.skCanvas());
+                  
+         XImage image{0};
+         if(convert_skia_bitmap_to_ximage(m_surface.bitmap(), image)) {
+            XPutImage(
+               m_xdisplay,
+               m_xwin,
+               m_xgc,
+               &image,
+               x, y,
+               x, y, w, h
+            );
+         } else {
+            throw std::runtime_error("Error to convert Skia surface to XImage");
+         }
+      }
+
       priv::SkiaSurface m_surface;
       static inline Atom WM_DELETE_WINDOW = 0;
       static inline Atom WM_PROTOCOLS = 0;
       ::Window m_xwin;
       ::Display* const m_xdisplay;
       ::GC m_xgc;
+      const Window& m_parent;
    };
 
 } // namespace os

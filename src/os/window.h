@@ -15,6 +15,7 @@ namespace os {
 
       void focus();
       void setTitle(const char* title);
+      void invalidate();
       void run();
 
       base::Signal<void()> onExit;
@@ -36,9 +37,6 @@ namespace os {
       #else
       #  error "No existe una compatibilidad con su sistema"
       #endif
-
-      Window(WindowBase* base) :
-         m_base{base} {}
 
       WindowBase* m_base;
       // SkCanvas* m_canvas;

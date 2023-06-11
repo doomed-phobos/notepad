@@ -24,6 +24,12 @@ namespace os {
          return {x + pt.x, y + pt.y};
       }
 
+      PointT& operator=(const PointT& pt) {
+         x = pt.x;
+         y = pt.y;
+         return *this;
+      }
+
       T x, y;
    };
 

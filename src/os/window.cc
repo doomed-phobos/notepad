@@ -15,23 +15,31 @@ namespace os {
       m_base->focus();
    }
 
+   void Window::invalidate() {
+      m_base->invalidate();
+   }
+
    void Window::setTitle(const char* title) {
       m_base->setTitle(title);
    }
 
    void Window::run() {
-      m_base->run(*this);
+      m_base->run();
    }
 
    std::shared_ptr<Window> Window::Make(int w, int h) {
+      std::shared_ptr<Window> win = std::make_shared<Window>();
+
       #ifdef NOTEPAD_UNIX
-      auto base = X11Window::Make(w, h);
+      auto base = X11Window::Make(*win, w, h);
+      if(base) {
+         win->m_base = base;
+         return win;
+      }
       #else
       // auto base = WinWindow::Make(w, h);
       #endif
-      if(!base)
-         return nullptr;
       
-      return std::shared_ptr<Window>(new Window(base));
+      return nullptr;
    }
 } // namespace os
