@@ -16,7 +16,9 @@ namespace os {
 
       base::Signal<void()> onExit;
       base::Signal<void(const MouseEvent&)> onMouseOver;
-      base::Signal<void(const MouseEvent&)> onMouseClick;
+      base::Signal<void(const MouseEvent&)> onMouseDown;
+      base::Signal<void(const MouseEvent&)> onMouseUp;
+      base::Signal<void(const MouseEvent&)> onMouseWheel;
 
       static std::shared_ptr<Window> Make(int w, int h);
    private:

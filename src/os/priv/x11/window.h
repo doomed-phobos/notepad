@@ -33,7 +33,6 @@ namespace os {
 
       void run(const Window& parent) {
          XEvent ev;
-         MouseEvent mev;
          bool run = true;
          while(run) {
             XNextEvent(m_xdisplay, &ev);
@@ -47,9 +46,29 @@ namespace os {
                   }
                break;
                case ButtonPress:
-               
+               case ButtonRelease: {
+                  MouseEvent mev;
+                  mev.pos = {ev.xbutton.x, ev.xbutton.y};
+                  mev.modifiers = get_key_modifiers(ev.xbutton.state);
+
+                  if(is_mouse_wheel_button(ev.xbutton.button)) {
+                     if(ev.type == ButtonPress) {
+                        mev.delta = get_mouse_wheel_delta(ev.xbutton.button);
+                        parent.onMouseWheel(mev);
+                     }
+                  } else {
+                     mev.button = get_mouse_button(ev.xbutton.button);
+
+                     if(ev.type == ButtonPress)
+                        parent.onMouseDown(mev);
+                     else if(mev.button)
+                        parent.onMouseUp(mev);
+                  }
+               }
                break;
                case MotionNotify: {
+                  MouseEvent mev;
+                  mev.modifiers = get_key_modifiers(ev.xmotion.state);
                   mev.pos = {ev.xmotion.x, ev.xmotion.y};
                   parent.onMouseOver(mev);
                }
@@ -76,7 +95,8 @@ namespace os {
          if(!WM_PROTOCOLS)
             WM_PROTOCOLS = XInternAtom(xdisplay, "WM_PROTOCOLS", False);
          XSetWMProtocols(xdisplay, xwin, &WM_DELETE_WINDOW, 1);
-         XSelectInput(xdisplay, xwin, ExposureMask | PointerMotionMask);
+         XSelectInput(xdisplay, xwin, ExposureMask | PointerMotionMask | ButtonPressMask |
+                                      ButtonReleaseMask | KeyPressMask | KeyReleaseMask);
 
          X11Window* win = new X11Window(xdisplay, xwin);
          win->focus();
@@ -85,8 +105,36 @@ namespace os {
       }
 
    private:
-      static bool is_mouse_wheel_button(int button) {
-         return true;
+      static inline bool is_mouse_wheel_button(const int button) {
+         return (button == Button4 || button == Button5 ||
+                 button == 6 || button == 7);
+      }
+
+      static inline char get_mouse_wheel_delta(const int button) {
+         switch(button) {
+            case Button4: return -1;
+            case Button5: return +1;
+            default:      return 0;
+         }
+      }
+
+      static inline MouseEvent::Button get_mouse_button(const int button) {
+         switch(button) {
+            case Button1: return MouseEvent::kLeft_Button;
+            case Button2: return MouseEvent::kMiddle_Button;
+            case Button3: return MouseEvent::kRight_Button;
+            default:      return MouseEvent::kUnknown_Button;
+         }
+      }
+
+      static inline KeyModifiers get_key_modifiers(const int state) {
+         int modifiers = kNone_KeyModifiers;
+         if(state & ShiftMask)                          modifiers |= kShift_KeyModifiers;
+         if(state & ControlMask)                      modifiers |= kCtrl_KeyModifiers;
+         if(state & (Mod1Mask | Mod5Mask))  modifiers |= kAlt_KeyModifiers;
+         if(state & Mod4Mask)                            modifiers |= kWin_KeyModifiers;
+
+         return (KeyModifiers)modifiers;
       }
 
       static inline Atom WM_DELETE_WINDOW = 0;
