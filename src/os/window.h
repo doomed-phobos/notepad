@@ -38,10 +38,8 @@ namespace os {
       #  error "No existe una compatibilidad con su sistema"
       #endif
 
-      Window() :
-         m_base{nullptr} {}
+      Window();
 
       WindowBase* m_base;
-      // SkCanvas* m_canvas;
    };
 } // namespace os

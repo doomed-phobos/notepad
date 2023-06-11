@@ -29,7 +29,7 @@ namespace os {
          int x, y;
          unsigned w, h, b, d;
          XGetGeometry(m_xdisplay, m_xwin, &root, &x, &y, &w, &h, &b, &d);
-         onPaint(x, y, w, h);
+         onPaint(0, 0, w, h);
       }
 
       void setTitle(const char* title) {

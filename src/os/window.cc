@@ -7,6 +7,9 @@
 #endif
 
 namespace os {
+   Window::Window() :
+      m_base{nullptr} {}
+
    Window::~Window() {
       delete m_base;
    }
@@ -28,7 +31,7 @@ namespace os {
    }
 
    std::shared_ptr<Window> Window::Make(int w, int h) {
-      std::shared_ptr<Window> win = std::make_shared<Window>();
+      std::shared_ptr<Window> win(new Window());
 
       #ifdef NOTEPAD_UNIX
       auto base = X11Window::Make(*win, w, h);
