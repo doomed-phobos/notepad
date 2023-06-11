@@ -5,8 +5,9 @@ set(NOTEPAD_SOURCES
 
 if(UNIX)
    find_package(X11 REQUIRED)
+   find_package(Threads REQUIRED)
    set(NOTEPAD_COMPILE_DEFINITIONS -DNOTEPAD_UNIX)   
-   set(NOTEPAD_LIBRARIES X11::X11)
+   set(NOTEPAD_LIBRARIES X11::X11 Threads::Threads)
    list(APPEND NOTEPAD_SOURCES
       priv/x11/x11.cc)
 elseif(WIN32)

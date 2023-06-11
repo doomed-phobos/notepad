@@ -1,7 +1,10 @@
 #pragma once
 #include "base/signal.h"
+#include "os/point.h"
 
 #include <memory>
+
+class SkCanvas;
 
 namespace os {
    struct MouseEvent;
@@ -19,6 +22,8 @@ namespace os {
       base::Signal<void(const MouseEvent&)> onMouseDown;
       base::Signal<void(const MouseEvent&)> onMouseUp;
       base::Signal<void(const MouseEvent&)> onMouseWheel;
+      base::Signal<void(const Point& /*size*/)> onResize;
+      base::Signal<void(SkCanvas* const)> onPaint;
 
       static std::shared_ptr<Window> Make(int w, int h);
    private:
@@ -36,5 +41,6 @@ namespace os {
          m_base{base} {}
 
       WindowBase* m_base;
+      // SkCanvas* m_canvas;
    };
 } // namespace os
