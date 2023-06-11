@@ -7,7 +7,8 @@
 #include <X11/Xatom.h>
 
 namespace os {
-   struct Window::X11Window {
+   class Window::X11Window {
+   public:
       X11Window(::Display* const xdisplay, ::Window xwin) :
          m_xdisplay{xdisplay},
          m_xwin{xwin} {}
@@ -32,6 +33,7 @@ namespace os {
 
       void run(const Window& parent) {
          XEvent ev;
+         MouseEvent mev;
          bool run = true;
          while(run) {
             XNextEvent(m_xdisplay, &ev);
@@ -44,8 +46,10 @@ namespace os {
                      run = false;
                   }
                break;
+               case ButtonPress:
+               
+               break;
                case MotionNotify: {
-                  MouseEvent mev;
                   mev.pos = {ev.xmotion.x, ev.xmotion.y};
                   parent.onMouseOver(mev);
                }
@@ -78,6 +82,11 @@ namespace os {
          win->focus();
          
          return win;
+      }
+
+   private:
+      static bool is_mouse_wheel_button(int button) {
+         return true;
       }
 
       static inline Atom WM_DELETE_WINDOW = 0;

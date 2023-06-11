@@ -1,5 +1,5 @@
 namespace os {
-   struct Window::WinWindow {
+   class Window::WinWindow {
 
    };
 } // namespace os
